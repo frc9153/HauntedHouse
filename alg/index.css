@@ -1,0 +1,14 @@
+body {
+    background-color: #181818;
+    color: #e0e0e0;
+}
+
+#main {
+    display: block;
+}
+
+#debug-info {
+    display: block;
+    font-family: monospace;
+    color: palevioletred;
+}
