@@ -25,6 +25,13 @@ fieldImg.addEventListener("load", function () {
 });
 fieldImg.src = "/field/field.png";
 
+let warningPattern;
+const warningTileImg = new Image();
+warningTileImg.addEventListener("load", function () {
+    warningPattern = ctx.createPattern(this, "repeat");
+});
+warningTileImg.src = "/tile.png";
+
 // Fetch field data
 const jsonRequest = await fetch("/field/field.json");
 const fieldData = await jsonRequest.json();
@@ -162,7 +169,7 @@ class Rect {
 }
 
 class Robot {
-    constructor(sizeFt) {
+    constructor(sizeFt, isNpc = true) {
         this.sizeFt = Vector2.fromArray(sizeFt);
 
         this.sizePx = new Vector2(
@@ -170,12 +177,19 @@ class Robot {
             Math.round(this.sizeFt.y * pixelsPerFoot[1]),
         );
 
-        this.positionPx = new Vector2(150, 150);
+        this.positionPx = new Vector2(
+            (Math.random() * 800) + 100,
+            150
+        );
         this.rotationDeg = 0;
         this.targetRotation = 0;
 
-        this.targetPos = null;
+        this.activeTargetPos = null;
         this.targetPath = [];
+        this.endTargetPos = null;
+
+        this.isNpc = isNpc;
+        this.npcActionTimer = 0;
     }
 
     render() {
@@ -183,17 +197,17 @@ class Robot {
         this.sizePx.sanityCheck();
 
         // Draw target (global position)
-        if (this.targetPos) {
+        if (this.activeTargetPos) {
             ctx.strokeStyle = "yellow";
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(...this.positionPx.toArray());
-            ctx.lineTo(...this.targetPos.toArray());
+            ctx.lineTo(...this.activeTargetPos.toArray());
             ctx.stroke();
         }
 
         // Bezier curve test
-        if (this.targetPos) {
+        if (this.activeTargetPos) {
             ctx.beginPath();
             ctx.strokeStyle = "yellow";
             // const pos1 = new Vector2(0, 0);
@@ -203,12 +217,12 @@ class Robot {
 
             const pos1 = this.positionPx;
             const pos2 = new Vector2(
-                (this.positionPx.x + this.targetPos.x) / 2, this.positionPx.y
+                (this.positionPx.x + this.activeTargetPos.x) / 2, this.positionPx.y
             );
             const pos3 = new Vector2(
-                (this.positionPx.x + this.targetPos.x) / 2, this.targetPos.y
+                (this.positionPx.x + this.activeTargetPos.x) / 2, this.activeTargetPos.y
             );
-            const pos4 = this.targetPos;
+            const pos4 = this.activeTargetPos;
 
             ctx.moveTo(...pos1.toArray());
             for (let t = 0; t < 1; t += 0.05) {
@@ -260,7 +274,7 @@ class Robot {
         ctx.rotate(this.rotationDeg * Math.PI / 180);
 
         // draw box
-        ctx.strokeStyle = "lightgreen";
+        ctx.strokeStyle = this.isNpc ? "pink" : "lightgreen";
         ctx.lineWidth = 5;
         ctx.strokeRect(
             -this.sizePx.x / 2,
@@ -286,24 +300,47 @@ class Robot {
     postRenderProcess() {
         this.creepCloserToTarget();
         this.turnABit();
-        updateDebug("Robot.sizeFt", this.sizeFt.toString());
-        updateDebug("Robot.sizePx", this.sizePx.toString());
-        updateDebug("Robot.rotationDeg", this.rotationDeg);
-        updateDebug("Robot.positionPx", this.positionPx.toString());
-        updateDebug("Robot.targetPos", this.targetPos ? this.targetPos.toString() : "null");
+        this.maybeDoNPCStuff();
+
+        if (!this.isNpc) {
+            updateDebug("Robot.sizeFt", this.sizeFt.toString());
+            updateDebug("Robot.sizePx", this.sizePx.toString());
+            updateDebug("Robot.positionPx", this.positionPx.toString());
+            updateDebug("Robot.targetPos", this.activeTargetPos ? this.activeTargetPos.toString() : "null");
+            updateDebug("Robot.rotationDeg", this.rotationDeg);
+            updateDebug("Robot.targetRotation", this.targetRotation);
+        }
+    }
+
+    maybeDoNPCStuff() {
+        if (!this.isNpc) return;
+        this.npcActionTimer--;
+        if (this.npcActionTimer > 0) return;
+        this.gotoPos([
+            (Math.random() * 900) + 100,
+            (Math.random() * 900) + 100,
+        ]);
+
+        this.npcActionTimer = Math.random() * 80;
     }
 
     closeEnoughToTarget() {
-        if (!this.targetPos) return true;
-        if (this.positionPx.minus(this.targetPos).magnitude() < CONFIG.SATISFACTORY_DISTANCE) return true;
+        if (!this.activeTargetPos) return true;
+        if (this.positionPx.minus(this.activeTargetPos).magnitude() < CONFIG.SATISFACTORY_DISTANCE) return true;
         return false;
     }
 
     updateCurrentTarget() {
         if (!this.targetPath.length) return;
-        this.targetPos = aStarGrid.localToGlobal(this.targetPath.shift());
+        this.activeTargetPos = aStarGrid.localToGlobal(this.targetPath.shift());
         // this.targetRotation = Math.random() * 360;
-        aStarGrid.targetPos = this.nodePos;
+        if (!this.isNpc) aStarGrid.targetPos = this.nodePos;
+    }
+
+    updatePath() {
+        const botPos = aStarGrid.getNodePosFromPx(this.positionPx.toArray());
+        this.targetPath = aStarGrid.search(botPos, this.endTargetPos);
+        if (!this.isNpc) aStarGrid.highlightedPositions = this.targetPath;
     }
 
     creepCloserToTarget() {
@@ -313,11 +350,11 @@ class Robot {
         }
 
         // get normalized direction vector
-        const deltaVector = this.targetPos.minus(this.positionPx);
+        const deltaVector = this.activeTargetPos.minus(this.positionPx);
         const direction = deltaVector.div(deltaVector.magnitude());
         this.positionPx = this.positionPx.plus(direction.mult(CONFIG.MAX_SPEED));
 
-        this.targetRotation = (Math.atan2(direction.y, direction.x) * 180 / Math.PI) - 90;
+        this.targetRotation = Math.round((Math.atan2(direction.y, direction.x) * 180 / Math.PI) - 90);
 
         if (this.closeEnoughToTarget()) {
             this.updateCurrentTarget();
@@ -325,27 +362,22 @@ class Robot {
     }
 
     turnABit() {
-        const rotError = this.targetRotation - this.rotationDeg;
+        const phi = ((this.targetRotation - this.rotationDeg + 540) % 360) - 180;
 
-        if (Math.abs(rotError) < CONFIG.ROT_SPEED) {
-            // Too small of a turn, just set it
+        // close enough! snap to prevent jitter!
+        if (Math.abs(phi) < CONFIG.ROT_SPEED) {
             this.rotationDeg = this.targetRotation;
             return;
         }
 
-        // No div by zero pls!
-        let rotErrorSign = 1;
-        if (rotError !== 0) rotErrorSign = rotError / Math.abs(rotError);
-
-        this.rotationDeg += CONFIG.ROT_SPEED * rotErrorSign;
+        const phiSign = phi !== 0 ? phi / Math.abs(phi) : 1;
+        this.rotationDeg += CONFIG.ROT_SPEED * phiSign;
     }
 
     gotoPos(posPx) {
         const nodePos = aStarGrid.getNodePosFromPx(posPx);
-        const botPos = aStarGrid.getNodePosFromPx(this.positionPx.toArray());
-
-        this.targetPath = aStarGrid.search(botPos, nodePos);
-        aStarGrid.highlightedPositions = this.targetPath;
+        this.endTargetPos = nodePos;
+        this.updatePath();
         return;
 
         // TODO: ALL THAT
@@ -373,15 +405,19 @@ class Robot {
     }
 }
 
-const robot = new Robot(CONFIG.BOT_SIZE_FT);
+const userRobot = new Robot(CONFIG.BOT_SIZE_FT, false);
+const npcRobots = [
+    new Robot(CONFIG.BOT_SIZE_FT)
+];
+const allRobots = [userRobot, ...npcRobots];
 
 canvas.addEventListener("click", function (e) {
-    robot.gotoPos([e.x, e.y]);
+    userRobot.gotoPos([e.x, e.y]);
 });
 
 canvas.addEventListener("mousemove", function (e) {
     if (!(e.buttons & 0b1)) return;
-    robot.gotoPos([e.x, e.y]);
+    userRobot.gotoPos([e.x, e.y]);
 });
 
 // Bad zones
@@ -426,7 +462,12 @@ const badZones = [
     // Blue charging station
     new BadZone([227, 290], [126, 160]),
     // Red charging station
-    new BadZone([780, 290], [126, 160])
+    new BadZone([780, 290], [126, 160]),
+
+    // Blue racks
+    new BadZone([47, 195], [85, 350]),
+    // Red racks
+    new BadZone([1000, 195], [85, 350]),
 ];
 
 class AStarNode {
@@ -544,7 +585,7 @@ class AStarGrid {
                 );
 
                 for (const badZone of badZones) {
-                    if (!badZone.rect.expandedFromCenter(100).containsPoint(globalPos)) continue;
+                    if (!badZone.rect.expandedFromCenter(50).containsPoint(globalPos)) continue;
                     node.okay = false;
                     break;
                 }
@@ -664,7 +705,7 @@ class AStarGrid {
                         ctx.lineWidth = 4;
                         ctx.strokeStyle = "aqua";
                     } else if (node.okay === false) {
-                        ctx.fillStyle = "#0000ff33";
+                        ctx.fillStyle = warningPattern ? warningPattern : "#0000ff33";
                         ctx.fillRect(
                             (x * this.nodeSize.x) + this.offset.x,
                             (y * this.nodeSize.y) + this.offset.y,
@@ -733,7 +774,10 @@ function renderFrame() {
     }
 
     // Render bot
-    robot.render();
+    for (const robot of allRobots) {
+        robot.render();
+    }
+
     window.requestAnimationFrame(renderFrame);
 }
 
