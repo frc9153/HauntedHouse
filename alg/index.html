@@ -7,9 +7,17 @@
 </head>
 
 <body>
-    <canvas id="main"></canvas>
+    <div id="canvas-wrapper">
+        <canvas id="main"></canvas>
+    </div>
     <i>"Oh dear. Perhaps I should be teaching you to speak before table manners."</i>
-    <span id="debug-info"></span>
+    <div class="h-split">
+        <div id="info-container">
+            <h2>GISELLE-1 on HauntedHouse</h2>
+            <span id="debug-info"></span>
+        </div>
+        <div id="settings-container"></div>
+    </div>
 </body>
 <!-- Modules for top-level await because i just like it that way okay -->
 <script src="index.js" type="module"></script>
