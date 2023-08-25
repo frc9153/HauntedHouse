@@ -16,6 +16,7 @@ const canvas = document.getElementById("main");
 const ctx = canvas.getContext("2d");
 
 const debugEl = document.getElementById("debug-info");
+let decayingRenderElements = [];
 
 // Draw image to canvas
 const fieldImg = new Image();
@@ -332,9 +333,29 @@ class Robot {
 
     updateCurrentTarget() {
         if (!this.targetPath.length) return;
+
+        const botPos = aStarGrid.getNodePosFromPx(this.positionPx.toArray());
+        let lastSeenTile;
+        let tileIndex = 0;
+
+        // Keep checking until we lose line of sight
+        for (const [i, pathSample] of Object.entries(this.targetPath)) {
+            let maybeWall = aStarGrid.raycastToLastGood(botPos, pathSample);
+            tileIndex = i;
+            if (maybeWall) break;
+
+            lastSeenTile = pathSample;
+        }
+
+        // Get rid of skipped tiles in path
+        this.targetPath = this.targetPath.slice(tileIndex);
+
         this.activeTargetPos = aStarGrid.localToGlobal(this.targetPath.shift());
-        // this.targetRotation = Math.random() * 360;
-        if (!this.isNpc) aStarGrid.targetPos = this.nodePos;
+
+        if (!this.isNpc) {
+            aStarGrid.targetPos = this.nodePos;
+            aStarGrid.highlightedPositions = this.targetPath;
+        }
     }
 
     updatePath() {
@@ -378,36 +399,12 @@ class Robot {
         const nodePos = aStarGrid.getNodePosFromPx(posPx);
         this.endTargetPos = nodePos;
         this.updatePath();
-        return;
-
-        // TODO: ALL THAT
-        let lastGood = botPos;
-        let anchorPoints = [];
-        // HACK!!
-        let oldHashes = [];
-        for (const pos of this.targetPath) {
-            let end = aStarGrid.raycastToLastGood(lastGood, pos);
-            if (!end) continue;
-
-            lastGood = end;
-            if (oldHashes.includes(end.toString())) continue;
-            anchorPoints.push(end);
-            oldHashes.push(end.toString());
-        }
-
-        if (!anchorPoints.length) {
-            anchorPoints = [nodePos];
-        }
-
-        this.targetPath = anchorPoints;
-        aStarGrid.highlightedPositions = this.targetPath;
-        console.log(anchorPoints);
     }
 }
 
 const userRobot = new Robot(CONFIG.BOT_SIZE_FT, false);
 const npcRobots = [
-    new Robot(CONFIG.BOT_SIZE_FT)
+    // new Robot(CONFIG.BOT_SIZE_FT)
 ];
 const allRobots = [userRobot, ...npcRobots];
 
@@ -501,9 +498,6 @@ class AStarGrid {
         this.targetPos = null;
         this.highlightedPositions = [];
         this.rayPos = [];
-
-        this.decayingRenderElement = [
-        ];
     }
 
     raycastToLastGood(pos1, pos2) {
@@ -512,6 +506,8 @@ class AStarGrid {
         // https://www.codeproject.com/Articles/15604/Ray-casting-in-a-2D-tile-based-environment
 
         let steep = Math.abs(pos2.y - pos1.y) > Math.abs(pos2.x - pos1.x);
+
+        const ogPos1 = new Vector2(pos1.x, pos1.y);
 
         if (steep) {
             pos1 = new Vector2(pos1.y, pos1.x);
@@ -537,23 +533,21 @@ class AStarGrid {
         for (let x = pos1.x; x <= pos2.x; x++) {
             let vec = steep ? new Vector2(y, x) : new Vector2(x, y);
 
-            // if (last) {
-            //     const oThis = this;
-            //     this.decayingRenderElement.push(
-            //         {
-            //             framesLeft: 20, func: function (context) {
-            //                 context.beginPath();
-            //                 context.strokeStyle = "cyan";
-            //                 context.moveTo(...oThis.localToGlobal(last).toArray());
-            //                 context.lineTo(...oThis.localToGlobal(vec).toArray());
-            //                 context.stroke();
-            //             }
-            //         }
-            //     );
-            // }
-
             if (!this.nodes[vec.x][vec.y].okay) {
                 this.rayPos = [last];
+                const oThis = this;
+                decayingRenderElements.push(
+                    {
+                        framesLeft: 100, func: function (context) {
+                            context.beginPath();
+                            context.strokeStyle = "cyan";
+                            context.moveTo(...oThis.localToGlobal(ogPos1).toArray());
+                            context.lineTo(...oThis.localToGlobal(last).toArray());
+                            context.stroke();
+                        }
+                    }
+                );
+
                 return last;
             }
 
@@ -682,21 +676,25 @@ class AStarGrid {
                 let node = this.nodes[x][y];
                 let styled = false;
 
-                for (const hlPos of this.highlightedPositions) {
-                    if (!hlPos.equals(vec)) continue;
-                    styled = true;
+                // target array
+                if (!styled) {
+                    for (const hlPos of this.highlightedPositions) {
+                        if (!hlPos.equals(vec)) continue;
+                        styled = true;
 
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = "green";
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = "#00ff0077";
+                    }
                 }
 
+                // Ray
                 if (!styled) {
                     for (const ray of this.rayPos) {
                         if (!ray.equals(vec)) continue;
                         styled = true;
 
-                        ctx.lineWidth = 4;
-                        ctx.strokeStyle = "pink";
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = "#ff8df2aa";
                     }
                 }
 
@@ -726,16 +724,6 @@ class AStarGrid {
                     this.nodeSize.y,
                 );
             }
-        }
-
-        // decayables
-        for (const re of this.decayingRenderElement) {
-            re.framesLeft--;
-            if (re.framesLeft < 0) {
-                this.decayingRenderElement = this.decayingRenderElement.filter(r => r !== re);
-            }
-
-            re.func(ctx);
         }
     }
 
@@ -771,6 +759,16 @@ function renderFrame() {
     // Render bad zones
     for (const badZone of badZones) {
         badZone.render();
+    }
+
+    // decayables
+    for (const re of decayingRenderElements) {
+        re.framesLeft--;
+        if (re.framesLeft < 0) {
+            decayingRenderElements = decayingRenderElements.filter(r => r !== re);
+        }
+
+        re.func(ctx);
     }
 
     // Render bot
