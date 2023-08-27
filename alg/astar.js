@@ -48,6 +48,7 @@ class AStarGrid {
         this.userRobot = userRobot;
 
         this.nodeSize = this.physicalSize.div(this.resolution);
+        this.evilNodePositions = [];
         this.resetNodes();
 
         this.targetPos = null;
@@ -157,7 +158,13 @@ class AStarGrid {
             [pos.x - 1, pos.y],
             [pos.x + 1, pos.y],
             [pos.x, pos.y - 1],
-            [pos.x, pos.y + 1]
+            [pos.x, pos.y + 1],
+            // Diagonals
+            [pos.x + 1, pos.y + 1],
+            [pos.x + 1, pos.y - 1],
+            [pos.x - 1, pos.y + 1],
+            [pos.x - 1, pos.y - 1],
+
         ]) {
             if (this.nodes[x] && this.nodes[x][y]) ret.push(new Vector2(x, y));
         }

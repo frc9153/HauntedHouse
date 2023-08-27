@@ -260,8 +260,17 @@ class Robot {
     updateCurrentTarget() {
         if (!this.targetPath.length) return;
 
+        this.activeTargetPos = field.aStarGrid.localToGlobal(this.targetPath.shift());
+
+        if (!this.isNpc) {
+            // field.aStarGrid.targetPos = this.nodePos;
+            field.aStarGrid.highlightedPositions = this.targetPath;
+        }
+        return;
+
+        // OLD LAZERING CODE FOR DIRECT LINE OPTIMIZATIONS, MAY WANT TO DO THAT L8R
+
         const botPos = field.aStarGrid.getNodePosFromPx(this.positionPx.toArray());
-        let lastSeenTile;
         let tileIndex = 0;
 
         // Keep checking until we lose line of sight
@@ -269,8 +278,6 @@ class Robot {
             let maybeWall = field.aStarGrid.raycastToLastGood(botPos, pathSample);
             tileIndex = i;
             if (maybeWall) break;
-
-            lastSeenTile = pathSample;
         }
 
         // Get rid of skipped tiles in path

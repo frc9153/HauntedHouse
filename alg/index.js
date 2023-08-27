@@ -19,7 +19,7 @@ let field = await Field.create("2023");
 
 let robots = [
     new Robot(Config.BOT_SIZE_FT, false),
-    new Robot(Config.BOT_SIZE_FT),
+    // new Robot(Config.BOT_SIZE_FT),
 ];
 
 const badZones = [

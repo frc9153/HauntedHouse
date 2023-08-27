@@ -7,7 +7,8 @@ const Config = {
         31.0 / 12.
     ],
     SATISFACTORY_DISTANCE: 5,
-    MAX_SPEED: 5,
+    // MAX_SPEED: 5,
+    MAX_SPEED: 1,
     ROT_SPEED: 4,
     BOT_ROTATE: false
 };
