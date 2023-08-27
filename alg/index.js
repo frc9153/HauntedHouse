@@ -1,8 +1,8 @@
 import { BadZone } from "./bad-zones.js";
+import { Config } from "./config.js";
 import { Field } from "./field.js";
 import { canvas, startRenderLoop } from "./render.js";
 import { Robot } from "./robot.js";
-import { Config } from "./config.js";
 
 // User controls
 canvas.addEventListener("click", function (e) {
@@ -19,7 +19,7 @@ let field = await Field.create("2023");
 
 let robots = [
     new Robot(Config.BOT_SIZE_FT, false),
-    // new Robot(Config.BOT_SIZE_FT),
+    new Robot(Config.BOT_SIZE_FT),
 ];
 
 const badZones = [

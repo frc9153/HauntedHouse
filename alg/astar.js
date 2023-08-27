@@ -38,6 +38,21 @@ class AStarNode {
     }
 }
 
+function perc2color(perc) {
+    perc = 100 - perc;
+    var r, g, b = 0;
+    if (perc < 50) {
+        r = 255;
+        g = Math.round(5.1 * perc);
+    }
+    else {
+        g = 255;
+        r = Math.round(510 - 5.10 * perc);
+    }
+    var h = r * 0x10000 + g * 0x100 + b * 0x1;
+    return '#' + ('000000' + h.toString(16)).slice(-6);
+}
+
 // As per https://briangrinstead.com/blog/astar-search-algorithm-in-javascript/
 class AStarGrid {
     constructor(field, resolution, badZones, userRobot) {
@@ -49,7 +64,7 @@ class AStarGrid {
 
         this.nodeSize = this.physicalSize.div(this.resolution);
         this.evilNodePositions = [];
-        this.resetNodes();
+        this.resetNodes(true);
 
         this.targetPos = null;
         this.highlightedPositions = [];
@@ -120,13 +135,18 @@ class AStarGrid {
         return null;
     }
 
-    resetNodes() {
-        // TODO: ??????????????????
-
+    resetNodes(visualize) {
         this.nodes = Array.from(
             { length: this.resolution.x },
             () => Array.from({ length: this.resolution.y })//, () => new AStarNode())
         );
+
+        if (visualize) {
+            this.nodeColors = Array.from(
+                { length: this.resolution.x },
+                () => Array.from({ length: this.resolution.y })//, () => new AStarNode())
+            );
+        }
 
         for (let x = 0; x < this.nodes.length; x++) {
             for (let y = 0; y < this.nodes[x].length; y++) {
@@ -139,6 +159,10 @@ class AStarGrid {
                 for (const badZone of this.badZones) {
                     if (!badZone.rect.expandedFromCenter(50).containsPoint(globalPos)) continue;
                     node.inEvilZone = true;
+
+                    let nodePos = new Vector2(x, y);
+                    this.evilNodePositions.push(nodePos);
+
                     break;
                 }
 
@@ -147,8 +171,9 @@ class AStarGrid {
         }
     }
 
-    heuristic(a, b) {
-        return Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
+    heuristic(nodePos, endPos) {
+        let loss = Math.abs(endPos.x - nodePos.x) + Math.abs(endPos.y - nodePos.y);
+        return loss;
     }
 
     neighbors(pos) {
@@ -172,14 +197,10 @@ class AStarGrid {
         return ret;
     }
 
-    search(startPos, endPos, avoidPositions = []) {
-        this.resetNodes();
+    search(startPos, endPos, avoidPositions = [], visualize = false) {
+        this.resetNodes(visualize);
         let open = [startPos];
-        let closedHashes = [];
-
-        for (const pos of avoidPositions) {
-            closedHashes.push(pos.toString());
-        }
+        let badPositions = avoidPositions;
 
         while (open.length) {
             let currentPos = open.sort((a, b) => a.f - b.f)[0];
@@ -200,17 +221,26 @@ class AStarGrid {
 
             // keep on truckin
             open = open.filter(pos => !pos.equals(currentPos));
-            closedHashes.push(currentPos.toString());
+            badPositions.push(currentPos);
 
             for (const neighborPos of this.neighbors(currentPos)) {
                 // old news GRANDPA!!!!!!!!!!
-                if (closedHashes.includes(neighborPos.toString())) continue;
+                if (neighborPos.inArray(badPositions)) continue;
 
                 let neighborNode = this.nodes[neighborPos.x][neighborPos.y];
                 if (neighborNode.isEvil(this.userRobot)) continue;
 
                 let gScore = currentNode.g + 1;
                 let gScoreBest = false;
+
+
+                // for (const badZone of this.badZones) {
+                //     if (!badZone.rect.expandedFromCenter(80).containsPoint(this.localToGlobal(neighborPos))) continue;
+                //     gScore *= 500;
+                //     break;
+                // }
+
+                if (visualize) this.nodeColors[neighborPos.x][neighborPos.y] = (gScore / 26) * 100;
 
                 if (neighborNode.f === null) {
                     // New!
@@ -245,6 +275,20 @@ class AStarGrid {
                 let vec = new Vector2(x, y);
                 let node = this.nodes[x][y];
                 let styled = false;
+
+                if (true) {
+                    let lossValue = this.nodeColors[x][y];
+
+                    if (lossValue) {
+                        ctx.fillStyle = perc2color(lossValue) + "20";
+                        ctx.fillRect(
+                            (x * this.nodeSize.x) + this.offset.x,
+                            (y * this.nodeSize.y) + this.offset.y,
+                            this.nodeSize.x,
+                            this.nodeSize.y,
+                        );
+                    }
+                }
 
                 // ephemeral fears
                 if (!styled) {
@@ -299,8 +343,9 @@ class AStarGrid {
                         );
                         continue;
                     } else {
+                        ctx.setLineDash([2]);
                         ctx.lineWidth = 1;
-                        ctx.strokeStyle = "#ff000033";
+                        ctx.strokeStyle = "#ff0000a0";
                     }
                 }
 
@@ -310,6 +355,7 @@ class AStarGrid {
                     this.nodeSize.x,
                     this.nodeSize.y,
                 );
+                ctx.setLineDash([]);
             }
         }
     }

@@ -7,10 +7,11 @@ const Config = {
         31.0 / 12.
     ],
     SATISFACTORY_DISTANCE: 5,
-    // MAX_SPEED: 5,
-    MAX_SPEED: 1,
+    MAX_SPEED: 5,
     ROT_SPEED: 4,
-    BOT_ROTATE: false
+    BOT_ROTATE: false,
+    FREEZE_NPCS: false,
+    NPC_BOREDOM_TIMER_RANGE: [60, 90],
 };
 
 const settingsContainerEl = document.getElementById("settings-container");
@@ -48,3 +49,4 @@ class UserSetting {
 }
 
 new UserSetting("BOT_ROTATE", "bool");
+new UserSetting("FREEZE_NPCS", "bool");

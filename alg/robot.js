@@ -25,6 +25,7 @@ class Robot {
 
         this.isNpc = isNpc;
         this.npcActionTimer = 0;
+        this.speed = Config.MAX_SPEED;
 
         this.ephemeralFears = [
             // {gridPos: Vector2, timeLeft: number}
@@ -145,10 +146,16 @@ class Robot {
     }
 
     postRenderProcess() {
+        let canMove = true;
+        if (this.isNpc && Config.FREEZE_NPCS) canMove = false;
+
         this.updateEphemeralFears();
-        this.creepCloserToTarget();
-        if (Config.BOT_ROTATE) this.turnABit();
-        this.maybeDoNPCStuff();
+
+        if (canMove) {
+            this.creepCloserToTarget();
+            if (Config.BOT_ROTATE) this.turnABit();
+            this.maybeDoNPCStuff();
+        }
 
         if (!this.isNpc) {
             updateDebug("Robot.sizeFt", this.sizeFt.toString());
@@ -163,6 +170,7 @@ class Robot {
 
     maybeDoNPCStuff() {
         if (!this.isNpc) return;
+
         this.npcActionTimer--;
         if (this.npcActionTimer > 0) return;
         this.gotoPos([
@@ -170,7 +178,7 @@ class Robot {
             (Math.random() * 900) + 100,
         ]);
 
-        this.npcActionTimer = Math.random() * 80;
+        this.npcActionTimer = (Math.random() * Config.NPC_BOREDOM_TIMER_RANGE[1] - Config.NPC_BOREDOM_TIMER_RANGE[0]) + Config.NPC_BOREDOM_TIMER_RANGE[0];
     }
 
     updateEphemeralFears() {
@@ -292,8 +300,22 @@ class Robot {
     }
 
     updatePath() {
+        if (this.isNpc) {
+            this.targetPath = [
+                new Vector2(13, 22),
+                new Vector2(30, 5),
+            ]
+            this.speed = 2;
+            return;
+        }
+
         const botPos = field.aStarGrid.getNodePosFromPx(this.positionPx.toArray());
-        this.targetPath = field.aStarGrid.search(botPos, this.endTargetPos, this.ephemeralFears.map(f => f.gridPos));
+        this.targetPath = field.aStarGrid.search(
+            botPos,
+            this.endTargetPos,
+            this.ephemeralFears.map(f => f.gridPos),
+            !this.isNpc
+        );
         if (!this.isNpc) field.aStarGrid.highlightedPositions = this.targetPath;
     }
 
@@ -306,7 +328,7 @@ class Robot {
         // get normalized direction vector
         const deltaVector = this.activeTargetPos.minus(this.positionPx);
         const direction = deltaVector.div(deltaVector.magnitude());
-        this.positionPx = this.positionPx.plus(direction.mult(Config.MAX_SPEED));
+        this.positionPx = this.positionPx.plus(direction.mult(this.speed));
 
         this.targetRotation = Math.round((Math.atan2(direction.y, direction.x) * 180 / Math.PI) - 90);
 

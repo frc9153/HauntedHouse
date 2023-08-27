@@ -76,11 +76,19 @@ class Vector2 {
 
     euclideanDistance(vec) {
         // thx ms hiers!
-        return Math.sqrt(
-            Math.pow(this.x - vec.x, 2)
+        return Math.hypot(
+            this.x - vec.x,
             +
-            Math.pow(this.y - vec.y, 2)
+            this.y - vec.y,
         );
+    }
+
+    inArray(array) {
+        for (const vec of array) {
+            vec.sanityCheck();
+            if (this.equals(vec)) return true;
+        }
+        return false;
     }
 }
 
