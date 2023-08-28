@@ -2,6 +2,7 @@ export {
     canvas, getImage, ctx as main2DContext, registerDecayingRenderCallback, registerRenderCallback, startRenderLoop
 };
 
+import { Config } from "./config.js";
 import { field } from "./field.js";
 
 /** @type {HTMLCanvasElement} */
@@ -50,7 +51,7 @@ function renderFrame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Render field
-    if (fieldImg.complete) {
+    if (fieldImg.complete && Config.DRAW_FIELD) {
         // Make visualized objects easier to see
         ctx.filter = "saturate(0.4)";
         ctx.drawImage(fieldImg, 0, 0);

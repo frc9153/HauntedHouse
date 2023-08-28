@@ -1,5 +1,6 @@
 export { AStarGrid, AStarNode };
 
+import { Config } from "./config.js";
 import { Vector2 } from "./geometry.js";
 import { updateDebug } from "./logging.js";
 import { main2DContext, registerDecayingRenderCallback, registerRenderCallback } from "./render.js";
@@ -268,6 +269,7 @@ class AStarGrid {
     }
 
     render(ctx) {
+	if (!Config.DRAW_GRID) return;
         // TODO: clean this ugggly stufff
 
         for (let y = 0; y < this.resolution.y; y++) {
@@ -280,7 +282,7 @@ class AStarGrid {
                     let lossValue = this.nodeColors[x][y];
 
                     if (lossValue) {
-                        ctx.fillStyle = perc2color(lossValue) + "20";
+                        ctx.fillStyle = perc2color(lossValue) + "50";
                         ctx.fillRect(
                             (x * this.nodeSize.x) + this.offset.x,
                             (y * this.nodeSize.y) + this.offset.y,

@@ -12,6 +12,8 @@ const Config = {
     BOT_ROTATE: false,
     FREEZE_NPCS: false,
     NPC_BOREDOM_TIMER_RANGE: [60, 90],
+    DRAW_GRID: true,
+    DRAW_FIELD: true,
 };
 
 const settingsContainerEl = document.getElementById("settings-container");
@@ -26,6 +28,7 @@ class UserSetting {
             case "bool":
                 inputEl = document.createElement("input");
                 inputEl.type = "checkbox";
+		inputEl.checked = Config[name];
                 break;
             default:
                 throw new Error("What is " + type);
@@ -50,3 +53,5 @@ class UserSetting {
 
 new UserSetting("BOT_ROTATE", "bool");
 new UserSetting("FREEZE_NPCS", "bool");
+new UserSetting("DRAW_GRID", "bool");
+new UserSetting("DRAW_FIELD", "bool");
