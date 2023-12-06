@@ -2,7 +2,7 @@ import time
 from typing import Any
 from networktables import NetworkTables
 
-NetworkTables.initalize(server="10.91.53.2")
+NetworkTables.initialize(server="10.91.53.2")
 
 def on_value_changed(key: str, value: Any, is_new: bool) -> None:
     prefix = "[NEW]" if is_new else ""

@@ -12,6 +12,11 @@ class Vector2 {
         return new Vector2(array[0], array[1]);
     }
 
+    graft(that) {
+        this.x = that.x;
+        this.y = that.y;
+    }
+
     toArray() {
         return [this.x, this.y];
     }

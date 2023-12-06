@@ -5,6 +5,7 @@ import { field } from "./field.js";
 import { Vector2 } from "./geometry.js";
 import { updateDebug } from "./logging.js";
 import { registerDecayingRenderCallback, registerRenderCallback, getImage } from "./render.js";
+import {updateRobotMovIntent, updateRobotRotIntent} from "./astral-projection.js";
 
 class Robot {
     constructor(sizeFt, isNpc = true) {
@@ -332,6 +333,14 @@ class Robot {
 
         this.targetRotation = Math.round((Math.atan2(direction.y, direction.x) * 180 / Math.PI) - 90);
 
+        if (!this.isNpc) {
+            if (!this.closeEnoughToTarget()) {
+                updateRobotMovIntent(this.speed);
+            } else {
+                updateRobotMovIntent(0.0);
+            }
+        }
+
         if (this.closeEnoughToTarget()) {
             this.updateCurrentTarget();
         }
@@ -343,11 +352,15 @@ class Robot {
         // close enough! snap to prevent jitter!
         if (Math.abs(phi) < Config.ROT_SPEED) {
             this.rotationDeg = this.targetRotation;
+            updateRobotRotIntent(0.0);
             return;
         }
 
         const phiSign = phi !== 0 ? phi / Math.abs(phi) : 1;
-        this.rotationDeg += Config.ROT_SPEED * phiSign;
+        const delta = Config.ROT_SPEED * phiSign;
+        this.rotationDeg += delta;
+
+        updateRobotRotIntent(delta);
     }
 
     gotoPos(posPx) {
