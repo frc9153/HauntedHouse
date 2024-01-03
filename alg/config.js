@@ -9,7 +9,7 @@ const Config = {
     SATISFACTORY_DISTANCE: 5,
     MAX_SPEED: 5,
     ROT_SPEED: 4,
-    BOT_ROTATE: false,
+    BOT_ROTATE: true,
     FREEZE_NPCS: false,
     NPC_BOREDOM_TIMER_RANGE: [60, 90],
     DRAW_GRID: true,

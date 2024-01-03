@@ -2,6 +2,7 @@
 // bebebebobobo
 //
 export {updateRobotRotIntent, updateRobotMovIntent};
+import { updateBotPos } from "./index.js";
 
 const ws = new WebSocket("ws://localhost:8001");
 const uplinkStatusEl = document.querySelector("#uplink-status");
@@ -51,7 +52,10 @@ ws.onopen = function (event) {
 
     ws.onmessage = function (event) {
         const j = JSON.parse(event.data);
-        if (j.success) return;
+        if (j.cmd === "getpose") {
+            updateBotPos(j.result);
+        }
+        
         //console.log("Yo we're J", j);
     }
 

@@ -335,7 +335,7 @@ class Robot {
 
         if (!this.isNpc) {
             if (!this.closeEnoughToTarget()) {
-                updateRobotMovIntent(this.speed);
+                updateRobotMovIntent(this.speed / Config.MAX_SPEED);
             } else {
                 updateRobotMovIntent(0.0);
             }
@@ -360,7 +360,7 @@ class Robot {
         const delta = Config.ROT_SPEED * phiSign;
         this.rotationDeg += delta;
 
-        updateRobotRotIntent(delta);
+        updateRobotRotIntent(delta / Config.ROT_SPEED);
     }
 
     gotoPos(posPx) {

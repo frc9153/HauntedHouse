@@ -62,7 +62,10 @@ class SimpleEcho(WebSocket):
         print(j)
         try:
             out = get_response(j["cmd"], j)
-            self.send_message(json.dumps(out))
+            self.send_message(json.dumps({
+                "cmd": j["cmd"],
+                "result": out
+            }))
         except:
             print("AHHHHHHHHHHHHHHHHHHHHH")
             self.send_message(json.dumps({"die": true}))

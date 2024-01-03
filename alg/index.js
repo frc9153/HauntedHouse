@@ -46,7 +46,7 @@ field.createAStarGrid([40, 24], badZones);
 // start render loop
 startRenderLoop();
 
-function updateBotPos(botpose) {
+export function updateBotPos(botpose) {
     const x = botpose[0] * METERS_TO_FEET;
     const y = botpose[1] * METERS_TO_FEET;
     const z = botpose[2] * METERS_TO_FEET;
@@ -69,7 +69,7 @@ function updateBotPos(botpose) {
     const posPx = getPhysicalRoboPx();
     robots[0].positionPx.graft(posPx);
 
-    console.log(x, y, z);
+    // console.log(x, y, z);
 }
 
 
