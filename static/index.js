@@ -4,6 +4,7 @@ import { Vector2 } from "./geometry.js";
 import { canvas, startRenderLoop, registerRenderCallback} from "./render.js";
 import "./astral-projection.js";
 import { Robot } from "./robot.js";
+import { updateDebug } from "./logging.js";
 
 const MAX_SAMPLES = 5;
 const METERS_TO_FEET = 3.28084;
@@ -16,6 +17,9 @@ canvas.addEventListener("click", function (e) {
 });
 
 canvas.addEventListener("mousemove", function (e) {
+    updateDebug("Canvas.mousePos", Vector2(e.offsetX, e.offsetY).toString());
+
+    // Left mouse
     if (!(e.buttons & 0b1)) return;
     field.userRobot.gotoPos([e.offsetX, e.offsetY]);
 });
