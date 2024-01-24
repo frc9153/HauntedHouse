@@ -13,7 +13,7 @@ class Vector2 {
     }
 
     static get Zero() {
-        return Vector2(0, 0);
+        return new Vector2(0, 0);
     }
 
     static fromArray(array) {

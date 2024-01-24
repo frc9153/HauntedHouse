@@ -5,7 +5,7 @@ import { field } from "./field.js";
 import { Vector2 } from "./geometry.js";
 import { updateDebug } from "./logging.js";
 import { registerDecayingRenderCallback, registerRenderCallback, getImage } from "./render.js";
-import {updateRobotMovIntent, updateRobotRotIntent} from "./astral-projection.js";
+import {updateRobotDriveVectorIntent, updateRobotRotIntent} from "./astral-projection.js";
 
 class Robot {
     constructor(sizeFt, isNpc = true) {
@@ -241,7 +241,7 @@ class Robot {
             const bangPos = Vector2.fromArray(this.positionPx.toArray());
             const imgId = Math.floor(Math.random() * 8);
             registerDecayingRenderCallback(this, async function (context) {
-                const img = await getImage(`/impact_effects/${imgId}.png`);
+                const img = await getImage(`/static/impact_effects/${imgId}.png`);
                 context.filter = "opacity(0.7)";
                 context.drawImage(
                     img,
@@ -335,9 +335,10 @@ class Robot {
 
         if (!this.isNpc) {
             if (!this.closeEnoughToTarget()) {
-                updateRobotMovIntent(this.speed / Config.MAX_SPEED);
+                updateRobotDriveVectorIntent(direction.toArray());
+                //this.speed / Config.MAX_SPEED);
             } else {
-                updateRobotMovIntent(0.0);
+                updateRobotDriveVectorIntent([0, 0]);
             }
         }
 

@@ -1,10 +1,10 @@
 // here we websocket around
 // bebebebobobo
-//
-export {updateRobotRotIntent, updateRobotMovIntent};
+
+export {updateRobotRotIntent, updateRobotDriveVectorIntent};
 import { updateBotPos } from "./index.js";
 
-const ws = new WebSocket("ws://localhost:8001");
+const ws = new WebSocket("ws://localhost:8080/socket_bocket_locket_rocket");
 const uplinkStatusEl = document.querySelector("#uplink-status");
 let coolAndAlive = true;
 let heartbeatInterval;
@@ -16,21 +16,20 @@ function isSocketOpen() {
 // Don't update state if not needed.
 const cachedValues = {
     rot: null,
-    mov: null,
+    driveVec: null,
 };
 
 function updateRobotRotIntent(rot) {
     if (rot === cachedValues.rot) return;
     cachedValues.rot = rot;
-    sendCommand("setrot", {rot: rot});
-    console.log("ROT", rot);
+    //sendCommand("setrot", {rot: rot});
+    //console.log("ROT", rot);
 }
 
-function updateRobotMovIntent(mov) {
-    if (mov === cachedValues.mov) return;
-    cachedValues.mov = mov;
-    sendCommand("setmov", {mov: mov});
-    console.log("MOV", mov);
+function updateRobotDriveVectorIntent(driveVec) {
+    if (driveVec === cachedValues.driveVec) return;
+    commandSet("drive_vector", driveVec);
+    console.log("MOV", driveVec);
 }
 
 ws.onopen = function (event) {
@@ -47,12 +46,12 @@ ws.onopen = function (event) {
 
     setInterval(function() {
         if (!isSocketOpen()) return;
-        sendCommand("getpose", {});
+        commandGet("pose");
     }, 100);
 
     ws.onmessage = function (event) {
         const j = JSON.parse(event.data);
-        if (j.cmd === "getpose") {
+        if (j.cmd === "get" && j.key === "pose") {
             updateBotPos(j.result);
         }
         
@@ -80,6 +79,14 @@ function sendCommand(cmd, args) {
     ws.send(JSON.stringify(out));
 }
 
+function commandSet(key, value) {
+    sendCommand("set", {key: key, value: value});
+}
+
+function commandGet(key) {
+    sendCommand("get", {key: key});
+}
+
 let movementAge = performance.now();
 
 function heartbeat() {
@@ -89,13 +96,13 @@ function heartbeat() {
     if (performance.now() - movementAge > 100) {
         clearInterval(heartbeatInterval);
         console.error("HELLLOOO NOBODY IS TALKING HELOOOOO WHERE ARE YOUU");
-        updateRobotMovIntent(0);
+        updateRobotDriveVectorIntent(0);
         updateRobotRotIntent(0);
         throw "Nobody is talking to me :^(";
     }
     */
 
-    sendCommand("badump", {token: Math.random()});
+    commandSet("badump", Math.random());
 }
 
 heartbeatInterval = setInterval(heartbeat, 100);
