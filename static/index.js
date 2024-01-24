@@ -59,7 +59,7 @@ export function updateBotPos(botpose) {
 
     oldThingeys.push(robotPosFeetUGLYHACK);
 
-    let avg = new Vector2(0, 0);
+    let avg = Vector2.Zero;
     for (const vec of oldThingeys) {
         avg = avg.plus(vec);
     }

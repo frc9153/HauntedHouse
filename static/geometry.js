@@ -8,6 +8,14 @@ class Vector2 {
         this.sanityCheck();
     }
 
+    [Symbol.iterator]() {
+        return [this.x, this.y][Symbol.iterator]();
+    }
+
+    static get Zero() {
+        return Vector2(0, 0);
+    }
+
     static fromArray(array) {
         return new Vector2(array[0], array[1]);
     }
@@ -26,6 +34,14 @@ class Vector2 {
     }
 
     sanityCheck() {
+        // Not object
+        if (typeof this.x !== "number")
+            throw new Error("VICHECK-FAIL: X not number");
+
+        if (typeof this.y !== "number")
+            throw new Error("VICHECK-FAIL: Y not number");
+
+        // NaN
         if (isNaN(this.x)) throw new Error("NAN!");
         if (isNaN(this.y)) throw new Error("NAN!");
     }
@@ -96,6 +112,13 @@ class Vector2 {
         return false;
     }
 }
+
+// Sketchy hack to let you instantiate like a function call
+Vector2 = new Proxy(Vector2, {
+    apply(target, thisArg, argArray) {
+        return new target(...argArray);
+    },
+});
 
 class Rect {
     constructor(position, size) {
