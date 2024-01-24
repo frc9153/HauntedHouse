@@ -4,9 +4,11 @@ import random
 from networktables import NetworkTables
 from simple_websocket_server import WebSocketServer, WebSocket
 
+
 class Responses:
     OK = {"success": "OK"}
     ERR = {"error": "BAD"}
+
 
 # yes this is ugly
 # clean it up okay
@@ -30,7 +32,7 @@ def get_response(cmd: str, dat):
     if cmd == "getpose":
         e = entry.getDoubleArray(0)
         return e
-    #elif cmd == "setvector":
+    # elif cmd == "setvector":
     #    mov = dat["mov"]
     #    rot = dat["rot"]
     #    print(f"Mov {mov}, Rot {rot}")
@@ -56,16 +58,14 @@ def get_response(cmd: str, dat):
     else:
         return Responses.ERR
 
+
 class SimpleEcho(WebSocket):
     def handle(self):
         j = json.loads(self.data)
         print(j)
         try:
             out = get_response(j["cmd"], j)
-            self.send_message(json.dumps({
-                "cmd": j["cmd"],
-                "result": out
-            }))
+            self.send_message(json.dumps({"cmd": j["cmd"], "result": out}))
         except:
             print("AHHHHHHHHHHHHHHHHHHHHH")
             self.send_message(json.dumps({"die": true}))
@@ -80,4 +80,3 @@ class SimpleEcho(WebSocket):
 
 server = WebSocketServer("", 8001, SimpleEcho)
 server.serve_forever()
-

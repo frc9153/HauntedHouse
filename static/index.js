@@ -1,4 +1,3 @@
-import { BadZone } from "./bad-zones.js";
 import { Config } from "./config.js";
 import { Field } from "./field.js";
 import { Vector2 } from "./geometry.js";
@@ -22,7 +21,7 @@ canvas.addEventListener("mousemove", function (e) {
 });
 
 // Init
-let field = await Field.create("2023");
+let field = await Field.create("2024");
 
 let robots = [
     new Robot(Config.BOT_SIZE_FT, false),
@@ -41,7 +40,7 @@ const badZones = [
     new BadZone([1000, 195], [85, 350]),
 ];
 
-field.createAStarGrid([40, 24], badZones);
+field.createAStarGrid([40, 24], field.badZones);
 
 // start render loop
 startRenderLoop();

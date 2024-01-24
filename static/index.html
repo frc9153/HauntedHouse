@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>HauntedHouse</title>
+    <!-- Have this early and isolated from everything else (as much as possible). -->
+    <script>
+        window.addEventListener("error", function(event) {
+            document.body.style.backgroundColor = "red";
+            try {
+                const quips = ["It's a meltdown!", "Going up in flames!", "Oh no!"];
+                const chosenQuip = quips[Math.floor(Math.random() * quips.length)];
+                alert(`[ERROR] ${chosenQuip}\n${event.filename.length ? event.filename : '<unknown>'}:${event.lineno}\n${event.message}`);
+            } catch (error) {
+                alert(`[ERROR] Tried to be funny but it made things worse :^( Check JS console.`);
+                throw error;
+            }
+        });
+    </script>
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+
+<body>
+    <div id="canvas-wrapper">
+        <canvas id="main"></canvas>
+    </div>
+    <span id="quip">"Oh dear. Perhaps I should be teaching you to speak before table manners."</span>
+    <div class="h-split">
+        <div id="info-container">
+            <span id="uplink-span">Uplink Status: <span id="uplink-status" class="bad">DOWN</span></span>
+            <span id="debug-info"></span>
+        </div>
+        <div id="settings-container"></div>
+    </div>
+</body>
+<!-- Modules for top-level await because i just like it that way okay -->
+<script src="/static/index.js" type="module"></script>
+
+</html>

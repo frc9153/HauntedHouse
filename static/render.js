@@ -42,7 +42,7 @@ async function getImage(url) {
 }
 
 function startRenderLoop() {
-    fieldImg.src = `/field/${field.version}-field.png`;
+    fieldImg.src = `/static/field/${field.version}-field.png`;
     renderFrame();
 }
 

@@ -10,7 +10,7 @@ const warningTileImg = new Image();
 warningTileImg.addEventListener("load", function () {
     warningPattern = main2DContext.createPattern(this, "repeat");
 });
-warningTileImg.src = "/tile.png";
+warningTileImg.src = "/static/tile.png";
 
 
 class AStarNode {
