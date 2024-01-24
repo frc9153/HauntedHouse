@@ -42,7 +42,7 @@ class Field {
         const badZones = [];
 
         for (const zone of jsonData.badZones) {
-            badZones.push(new BadZone(zone));
+            badZones.push(new BadZone(...zone));
         }
 
         console.log(jsonData, fieldSizePx);

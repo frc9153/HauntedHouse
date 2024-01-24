@@ -28,18 +28,6 @@ let robots = [
     new Robot(Config.BOT_SIZE_FT),
 ];
 
-const badZones = [
-    // Blue charging station
-    new BadZone([227, 290], [126, 160]),
-    // Red charging station
-    new BadZone([780, 290], [126, 160]),
-
-    // Blue racks
-    new BadZone([47, 195], [85, 350]),
-    // Red racks
-    new BadZone([1000, 195], [85, 350]),
-];
-
 field.createAStarGrid([40, 24], field.badZones);
 
 // start render loop
