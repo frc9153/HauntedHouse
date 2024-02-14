@@ -47,11 +47,11 @@ class SocketResponses:
 
 class NetTableTables:
     limelight = NetworkTables.getTable("limelight")
-    command_and_control = NetworkTables.getTable("deadfoodbabe")
+    command_and_control = NetworkTables.getTable("evil_manipulation")
 
 class NetTableEntries:
     pose = NetTableTables.limelight.getEntry("botpose")
-    heartbeat = NetTableTables.command_and_control.getEntry("badump")
+    heartbeat = NetTableTables.command_and_control.getEntry("badump_token")
     drive_vector = NetTableTables.command_and_control.getEntry("drive_vector")
 
 def error(*args) -> None:
@@ -128,7 +128,7 @@ def execute_get_command(key: str) -> Any:
     return SocketResponses.ERROR
 
 if __name__ == "__main__":
-    print("Ready! :^)")
+    print("Ready! :^) @ http://localhost:8080")
     app.run(
         host="localhost",
         port=8080,
